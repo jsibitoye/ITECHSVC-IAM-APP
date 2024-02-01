@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Page</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- title from controller -->
+    <h1 th:text="${title}">Admin Page</h1>
+
+    <!-- admin-only message -->
+    <p th:text="${message}">Admin message</p>
+
+    <hr>
+
+    <!-- show who is logged in -->
+    <p>
+        Logged-in admin:
+        <strong th:text="${username}">username</strong>
+    </p>
+
+    <hr>
+
+    <a href="/dashboard">Back to Dashboard</a>
+    <br><br>
+    <a href="/logout">Logout</a>
+</body>
+</html>
