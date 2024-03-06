@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1 th:text="${title}">Dashboard</h1>
+    <p th:text="${info}">Info goes here</p>
+    <p>Logged in as: <span th:text="${username}">Username</span></p>
+    <p>Authentication Status: <span th:text="${authStatus}">Auth Status</span></p>
+    
+    <!-- logout link: this opens Spring Security logout flow -->
+    <a href="/logout">Logout</a>
+    <hr>
+
+    <a href="/">Back Home</a>
+</body> 
+</html>
