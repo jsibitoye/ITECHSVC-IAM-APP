@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>iTechSVC IAM App</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1 th:text="${appName}">iTechSVC IAM App</h1>
+    <p th:text="${message}">Welcome message</p>
+
+    <!-- show this only after logout -->
+    <p th:if="${logoutMessage}" th:text="${logoutMessage}"></p>
+
+    <hr>
+
+    <a href="/dashboard">Go to Dashboard</a>
+</body>
+</html>
