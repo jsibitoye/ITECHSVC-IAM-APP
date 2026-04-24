@@ -1,43 +1,76 @@
-package com.iTechSVC.iTechSVC_iam_app; // this must match your package structure
+package com.iTechSVC.iTechSVC_iam_app; // must match your package
 
-import org.springframework.context.annotation.Bean; // tells Spring to manage objects
+import org.springframework.context.annotation.Bean; // lets Spring manage returned objects
 import org.springframework.context.annotation.Configuration; // marks this class as a config class
-import org.springframework.security.config.Customizer; // used for default login setup
-import org.springframework.security.config.annotation.web.builders.HttpSecurity; // main security config tool
-import org.springframework.security.web.SecurityFilterChain; // represents the security rules pipeline - it is the chain of security rules applied to requests
+import org.springframework.security.config.Customizer; // gives us default form login setup
+import org.springframework.security.config.annotation.web.builders.HttpSecurity; // main security config object
+import org.springframework.security.core.userdetails.User; // used to build users in memory
+import org.springframework.security.core.userdetails.UserDetails; // represents one user account
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // encodes passwords safely
+import org.springframework.security.crypto.password.PasswordEncoder; // password encoder interface
+import org.springframework.security.provisioning.InMemoryUserDetailsManager; // stores users in app memory
+import org.springframework.security.web.SecurityFilterChain; // chain of security rules
 
-@Configuration // tells Spring: this class contains configuration logic
+@Configuration // tells Spring this class contains configuration
 public class SecurityConfig {
 
-    @Bean // tells Spring: create and manage this object (SecurityFilterChain)
+    @Bean // this defines the URL security rules - Note @Bean makes this method's return value managed by Spring and it tells spring to the following object as a bean that can be injected into other parts of the app. In this case, it defines the security filter chain that Spring Security will use to protect our web application.
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // define who can access what
             .authorizeHttpRequests(auth -> auth
 
-                // allow anyone to access the home page without logging in ( public access page)
+                // anyone can open the home page
                 .requestMatchers("/", "/home").permitAll()
 
-                // require login for dashboard
+                // any logged-in user can open the dashboard
                 .requestMatchers("/dashboard").authenticated()
 
-                // any other request must also be authenticated
+                // only users with ADMIN role can open /admin
+                .requestMatchers("/admin").hasRole("ADMIN")
+
+                // anything else requires login
                 .anyRequest().authenticated()
             )
 
-            // enable login form (Spring's default login page)
+            // use Spring's built-in login page for now
             .formLogin(Customizer.withDefaults())
-                // enable logout support (Spring's default logout handling)
-            
+
+            // configure logout
             .logout(logout -> logout
-                .logoutUrl("/logout") // URL to trigger logout
-                .logoutSuccessUrl("/") // where to go after logout
-                .invalidateHttpSession(true) // clear session on logout - invalidate the HTTP session so the server forgets the logged-in user
-                .deleteCookies("JSESSIONID") // delete JSESSIONID  session cookie from browser on logout
+                .logoutUrl("/logout") // logout endpoint
+                .logoutSuccessUrl("/?logout") // go home after logout
+                .invalidateHttpSession(true) // destroy session on server
+                .deleteCookies("JSESSIONID") // remove session cookie
+            )
+            // configure what happens when user is authenticated but not allowed
+            .exceptionHandling(ex -> ex
+                .accessDeniedPage("/access-denied") // show our custom page instead of the white 403 page
             );
 
-        // build and return the security configuration
-        return http.build();
+        return http.build(); // finalize the security setup
+    }
+
+    @Bean // defines the users stored in memory for learning/testing
+    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
+
+        UserDetails employee = User.builder()
+            .username("employee1") // login username
+            .password(passwordEncoder.encode("Password123")) // encoded password
+            .roles("EMPLOYEE") // this user has EMPLOYEE role
+            .build();
+
+        UserDetails admin = User.builder()
+            .username("admin1") // login username
+            .password(passwordEncoder.encode("Password123")) // encoded password
+            .roles("EMPLOYEE", "ADMIN") // admin also has employee role
+            .build();
+
+        return new InMemoryUserDetailsManager(employee, admin); // register both users
+    }
+
+    @Bean // password encoder bean used by Spring Security
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(); // BCrypt is the standard safe encoder to use
     }
 }

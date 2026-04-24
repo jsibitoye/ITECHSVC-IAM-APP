@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Dashboard</title>
     <meta charset="UTF-8">
@@ -9,7 +10,21 @@
     <p th:text="${info}">Info goes here</p>
     <p>Logged in as: <span th:text="${username}">Username</span></p>
     <p>Authentication Status: <span th:text="${authStatus}">Auth Status</span></p>
-    
+    <p>Roles: <span th:text="${roles}">User Roles</span></p>
+
+        <!-- this section is shown only if the user has ADMIN role -->
+    <div sec:authorize="hasRole('ADMIN')">
+        <p><strong>Admin tools are visible because you are an admin.</strong></p>
+        <a href="/admin">Go to Admin Page</a>
+    </div>
+
+    <!-- this section is shown only if the user does NOT have ADMIN role -->
+    <div sec:authorize="!hasRole('ADMIN')">
+        <p>You are not an admin, so the admin link is hidden.</p>
+    </div>
+
+    <br><br>
+
     <!-- logout link: this opens Spring Security logout flow -->
     <a href="/logout">Logout</a>
     <hr>
