@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Report</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- page title -->
+    <h1 th:text="${title}">Report</h1>
+
+    <p>
+        Current user:
+        <strong th:text="${username}">username</strong>
+    </p>
+
+    <hr>
+
+    <!-- report content from the service -->
+    <p th:text="${reportData}">Report data goes here</p>
+
+    <hr>
+
+    <a href="/dashboard">Back to Dashboard</a>
+
+    <br><br>
+
+    <a href="/logout">Logout</a>
+</body>
+</html>

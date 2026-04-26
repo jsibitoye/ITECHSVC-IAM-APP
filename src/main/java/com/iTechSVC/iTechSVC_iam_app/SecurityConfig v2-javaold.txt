@@ -1,0 +1,85 @@
+package com.iTechSVC.iTechSVC_iam_app; // must match your package
+
+import org.springframework.context.annotation.Bean; // lets Spring manage returned objects
+import org.springframework.context.annotation.Configuration; // marks this class as a config class
+import org.springframework.security.config.Customizer; // gives us default form login setup
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity; // main security config object
+import org.springframework.security.core.userdetails.User; // used to build users in memory
+import org.springframework.security.core.userdetails.UserDetails; // represents one user account
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // encodes passwords safely
+import org.springframework.security.crypto.password.PasswordEncoder; // password encoder interface
+import org.springframework.security.provisioning.InMemoryUserDetailsManager; // stores users in app memory
+import org.springframework.security.web.SecurityFilterChain; // chain of security rules
+
+@Configuration // tells Spring this class contains configuration
+@EnableMethodSecurity // enables method-level authorization like @PreAuthorize
+
+public class SecurityConfig {
+
+    @Bean // this defines the URL security rules - Note @Bean makes this method's return value managed by Spring and it tells spring to the following object as a bean that can be injected into other parts of the app. In this case, it defines the security filter chain that Spring Security will use to protect our web application.
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        http
+            .authorizeHttpRequests(auth -> auth
+
+                // home page is public
+                .requestMatchers("/", "/home").permitAll()
+
+                // access denied page must be public
+                .requestMatchers("/access-denied").permitAll()
+
+                // dashboard requires login
+                .requestMatchers("/dashboard").authenticated()
+
+                // admin page requires ADMIN role
+                .requestMatchers("/admin").hasRole("ADMIN")
+
+                // method security demo pages require login
+                .requestMatchers("/reports", "/reports/admin").authenticated()
+
+                // anything else requires login
+                .anyRequest().authenticated()
+            )
+
+            // use Spring's built-in login page for now
+            .formLogin(Customizer.withDefaults())
+
+            // configure logout
+            .logout(logout -> logout
+                .logoutUrl("/logout") // logout endpoint
+                .logoutSuccessUrl("/?logout") // go home after logout
+                .invalidateHttpSession(true) // destroy session on server
+                .deleteCookies("JSESSIONID") // remove session cookie
+            )
+            // configure custom access denied page - what happens when user is authenticated but not allowed
+            .exceptionHandling(ex -> ex
+                .accessDeniedPage("/access-denied") // show our custom page instead of the white 403 page
+            );
+
+        return http.build(); // finalize the security setup
+    }
+
+    @Bean // defines the users stored in memory for learning/testing
+    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
+
+        UserDetails employee = User.builder()
+            .username("employee1") // login username
+            .password(passwordEncoder.encode("Password123")) // encoded password
+            .roles("EMPLOYEE") // this user has EMPLOYEE role
+            .build();
+
+        UserDetails admin = User.builder()
+            .username("admin1") // login username
+            .password(passwordEncoder.encode("Password123")) // encoded password
+            .roles("EMPLOYEE", "ADMIN") // admin also has employee role
+            .build();
+
+        return new InMemoryUserDetailsManager(employee, admin); // register both users
+    }
+
+    @Bean // password encoder bean used by Spring Security
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(); // BCrypt is the standard safe encoder to use
+    }
+}

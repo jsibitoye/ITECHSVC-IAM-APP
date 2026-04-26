@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam; // reads query para
 
 @Controller // tells Spring this class handles browser page requests
 public class HomeController {
+    private final ReportService reportService; // service for generating reports
+
+    public HomeController(ReportService reportService) {
+        this.reportService = reportService;
+    }
 
     @GetMapping("/") // when user visits the home page
     public String home(Model model, @RequestParam(value = "logout", required = false) String logout) {
@@ -61,20 +66,39 @@ public class HomeController {
         return "admin"; // render admin.html
     }
     
-    @GetMapping("/access-denied") // handles custom access denied page
+     @GetMapping("/access-denied") // handles custom access denied page
     public String accessDenied(Model model, Authentication authentication) {
-        // authentication may still exist here because the user is logged in,
-        // they are just not authorized for the page they tried to open
-
         if (authentication != null) {
-            model.addAttribute("username", authentication.getName()); // show who got denied
+            model.addAttribute("username", authentication.getName()); // show current username
         } else {
-            model.addAttribute("username", "anonymous"); // fallback if no user info exists
+            model.addAttribute("username", "anonymous"); // fallback if no login exists
         }
 
         model.addAttribute("title", "Access Denied"); // page title
         model.addAttribute("message", "You do not have permission to access that page."); // friendly message
 
         return "access-denied"; // render access-denied.html
+    }
+
+    @GetMapping("/reports") // endpoint for all logged-in users
+    public String employeeReport(Model model, Authentication authentication) {
+        String report = reportService.getEmployeeReport(); // service method protected by @PreAuthorize
+
+        model.addAttribute("title", "Employee Report"); // page title
+        model.addAttribute("username", authentication.getName()); // current username
+        model.addAttribute("reportData", report); // report text for HTML
+
+        return "report"; // render report.html
+    }
+
+    @GetMapping("/reports/admin") // endpoint for admin report
+    public String adminReport(Model model, Authentication authentication) {
+        String report = reportService.getAdminReport(); // service method protected by @PreAuthorize
+
+        model.addAttribute("title", "Admin Report"); // page title
+        model.addAttribute("username", authentication.getName()); // current username
+        model.addAttribute("reportData", report); // report text for HTML
+
+        return "report"; // render report.html
     }
 }
